@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hệ Thức Lượng Trong Tam Giác</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- CSS KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <!-- JS KaTeX & Auto-render plugin -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+    <!-- Cảnh báo xoay màn hình trên mobile -->
+    <div class="rotate-overlay">
+        <div class="rotate-content">
+            <h2>Vui lòng xoay ngang thiết bị</h2>
+            <p>Ứng dụng hiển thị tốt nhất ở chế độ màn hình ngang để quan sát hình vẽ và bảng điều khiển song song.</p>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>📐 Luyện Tập Hệ Thức Lượng Trong Tam Giác</h1>
+        </header>
+
+        <!-- Main Content -->
+        <div class="app-main">
+            <!-- Bảng điều khiển (Bên trái / Trên cùng trên mobile) -->
+            <aside class="control-panel">
+                <!-- Tabs chuyển thẻ -->
+                <div class="tab-header-container">
+                    <div class="tabs-list" id="tabsList">
+                        <div class="function-tab active" data-tab="1">Thẻ 1: Cosin</div>
+                        <div class="function-tab" data-tab="2">Thẻ 2: Sin</div>
+                        <div class="function-tab" data-tab="3">Thẻ 3: Diện tích</div>
+                        <div class="function-tab" data-tab="4">Thẻ 4: Thử thách</div>
+                    </div>
+                </div>
+
+                <!-- Nội dung các thẻ -->
+                <div class="function-card-box">
+                    <div id="tabContent" class="panel-section">
+                        <h3>🎯 Hướng dẫn luyện tập</h3>
+                        <p class="hint">Chọn thẻ phía trên để bắt đầu bài tập luyện định lý Cosin theo từng bước, định lý Sin, công thức diện tích hoặc chế độ tính điểm phản xạ.</p>
+                        <button class="btn btn-primary" id="btnStart">Tạo câu hỏi mới</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Khu vực hiển thị hình vẽ SVG (Bên phải) -->
+            <main class="graph-viewport">
+                <svg id="coordinate-system" viewBox="0 0 500 400" preserveAspectRatio="xMidYMid meet">
+                    <!-- Hình minh họa tam giác sẽ được vẽ động bằng JS -->
+                    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#64748b" font-size="15">
+                        Hình minh họa tam giác sẽ hiển thị ở đây
+                    </text>
+                </svg>
+                <div class="cursor-coords" id="cursorCoords">Trạng thái: Sẵn sàng</div>
+            </main>
+        </div>
+    </div>
+
+    <script defer src="script.js"></script>
+</body>
+</html>
