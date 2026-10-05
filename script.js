@@ -484,14 +484,20 @@ function startChallengeSession() {
 function nextChallengeQuestion() {
     let b = Math.floor(Math.random() * 4) + 5;
     let c = Math.floor(Math.random() * 4) + 5;
-    let angleA = [30, 45, 60][Math.floor(Math.random() * 3)];
+    let angleA = [30, 45, 60, 120, 135, 150][Math.floor(Math.random() * 6)];
     let rad = angleA * Math.PI / 180;
     let a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(rad));
 
     let area = 0.5 * b * c * Math.sin(rad);
     let trueAns = Math.round(area * 100) / 100;
 
-    currentQuestion = { ans: trueAns, a: a, b: b, c: c };
+    // Gán type cho Thử thách để hàm vẽ nhận biết và chỉ ẩn cạnh a (BC) hoặc gán nhãn thích hợp
+    currentQuestion = { 
+        type: 'challenge_area', 
+        ans: trueAns, 
+        a: a, b: b, c: c 
+    };
+
     drawTriangleThreeSidesSVG(a, b, c);
 
     const box = document.getElementById("challengeBox");
@@ -533,13 +539,11 @@ function submitChallengeAnswer() {
     }
 }
 
+
 // ==========================================
-// HỆ THỐNG VẼ HÌNH SVG TỰ ĐỘNG CÂN BẰNG TỶ LỆ (FIT VIEWPORT)
+// HỆ THỐNG VẼ HÌNH SVG DỰA THEO ĐÚNG DẠNG GIẢ THIẾT
 // ==========================================
-// ==========================================
-// HỆ THỐNG VẼ HÌNH SVG TỰ ĐỘNG CÂN BẰNG TỶ LỆ (LABEL HIỂN THỊ THEO ĐỀ BÀI)
-// ==========================================
-function drawTriangleThreeSidesSVG(a, b, c) {
+function drawTriangleByScenario(a, b, c, scenario) {
     const svg = document.getElementById("coordinate-system");
     if (!svg) return;
     svg.innerHTML = "";
@@ -549,19 +553,24 @@ function drawTriangleThreeSidesSVG(a, b, c) {
     const viewWidth = viewport ? viewport.clientWidth : 500;
     const viewHeight = viewport ? viewport.clientHeight : 400;
 
-    // Cập nhật thuộc tính viewBox linh hoạt khớp với chiều rộng / chiều cao thực tế
     svg.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`);
 
-    // 2. Tính tọa độ gốc toán học của các đỉnh (gốc A tại (0,0))
+    // 2. Tính toán tọa độ gốc toán học của các đỉnh (gốc A tại (0,0))
     let cosA = (b*b + c*c - a*a) / (2 * b * c);
     cosA = Math.max(-1, Math.min(1, cosA));
     let angleA_rad = Math.acos(cosA);
+    let angleB_rad = Math.acos((a*a + c*c - b*b) / (2 * a * c));
+    let angleC_rad = Math.acos((a*a + b*b - c*c) / (2 * a * b));
+
+    let angleA_deg = Math.round(angleA_rad * 180 / Math.PI);
+    let angleB_deg = Math.round(angleB_rad * 180 / Math.PI);
+    let angleC_deg = Math.round(angleC_rad * 180 / Math.PI);
 
     let Ax = 0, Ay = 0;
     let Bx = c, By = 0;
     let Cx = b * Math.cos(angleA_rad), Cy = b * Math.sin(angleA_rad);
 
-    // 3. Tìm Bounding Box nguyên bản của tam giác
+    // 3. Tìm Bounding Box nguyên bản để tự động Scale & Center
     let minX = Math.min(Ax, Bx, Cx);
     let maxX = Math.max(Ax, Bx, Cx);
     let minY = Math.min(Ay, By, Cy);
@@ -570,9 +579,8 @@ function drawTriangleThreeSidesSVG(a, b, c) {
     let rawWidth = maxX - minX;
     let rawHeight = maxY - minY;
 
-    // 4. Tính toán tỷ lệ Scale tự động sao cho vừa khít màn hình và dành Margin cho Label
-    const paddingX = 60;
-    const paddingY = 60;
+    const paddingX = 65;
+    const paddingY = 65;
 
     let availWidth = Math.max(viewWidth - 2 * paddingX, 100);
     let availHeight = Math.max(viewHeight - 2 * paddingY, 100);
@@ -581,14 +589,13 @@ function drawTriangleThreeSidesSVG(a, b, c) {
     let scaleY = availHeight / rawHeight;
     let scale = Math.min(scaleX, scaleY);
 
-    // 5. Căn giữa tam giác trong vùng vẽ SVG
     let scaledWidth = rawWidth * scale;
     let scaledHeight = rawHeight * scale;
 
     let offsetX = (viewWidth - scaledWidth) / 2 - minX * scale;
     let offsetY = (viewHeight - scaledHeight) / 2 + maxY * scale; 
 
-    // Chuyển đổi tọa độ toán học sang tọa độ màn hình SVG
+    // Chuyển đổi sang tọa độ màn hình SVG
     let screenAx = Ax * scale + offsetX;
     let screenAy = offsetY - Ay * scale;
 
@@ -598,7 +605,7 @@ function drawTriangleThreeSidesSVG(a, b, c) {
     let screenCx = Cx * scale + offsetX;
     let screenCy = offsetY - Cy * scale;
 
-    // 6. Vẽ Đa giác Tam giác ABC
+    // 4. Vẽ Đa giác Tam giác ABC
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     polygon.setAttribute("points", `${screenAx},${screenAy} ${screenBx},${screenBy} ${screenCx},${screenCy}`);
     polygon.setAttribute("fill", "rgba(37, 99, 235, 0.08)");
@@ -606,51 +613,119 @@ function drawTriangleThreeSidesSVG(a, b, c) {
     polygon.setAttribute("stroke-width", "2.5");
     svg.appendChild(polygon);
 
-    // 7. Định vị tên các đỉnh A, B, C
+    // 5. Vẽ nhãn Tên Đỉnh A, B, C
     let fontLabelSize = Math.max(Math.min(viewWidth * 0.035, 18), 14);
 
-    createSvgText(svg, screenAx - 20, screenAy + 8, "A", `font-weight:bold; fill:#1e293b; font-size:${fontLabelSize}px;`);
+    createSvgText(svg, screenAx - 22, screenAy + 8, "A", `font-weight:bold; fill:#1e293b; font-size:${fontLabelSize}px;`);
     createSvgText(svg, screenBx + 8, screenBy + 8, "B", `font-weight:bold; fill:#1e293b; font-size:${fontLabelSize}px;`);
     createSvgText(svg, screenCx - 6, screenCy - 12, "C", `font-weight:bold; fill:#1e293b; font-size:${fontLabelSize}px;`);
 
-    // 8. TÍNH TOÁN VÀ ẨN/HIỆN LABEL DỰA THEO ĐỀ BÀI (CURRENTQUESTION)
+    // 6. XỬ LÝ NHÃN CẠNH VÀ NHÃN GÓC THEO ĐÚNG GIẢ THIẾT SCENARIO
     let dispA = Math.round(a * 100) / 100;
     let dispB = Math.round(b * 100) / 100;
     let dispC = Math.round(c * 100) / 100;
 
-    let labelTextA = `a = ${dispA}`;
-    let labelTextB = `b = ${dispB}`;
-    let labelTextC = `c = ${dispC}`;
+    let labelTextA = "a";
+    let labelTextB = "b";
+    let labelTextC = "c";
 
-    // Kiểm tra thông tin câu hỏi hiện tại để gán nhãn "?" cho phần tử cần tính
-    if (typeof currentQuestion !== 'undefined' && currentQuestion) {
-        if (currentQuestion.type === 'cosine_side') {
-            // Câu hỏi tính cạnh
-            let target = currentQuestion.target; // 'A', 'B', hoặc 'C'
-            if (target === 'A') labelTextA = "a = ?";
-            else if (target === 'B') labelTextB = "b = ?";
-            else if (target === 'C') labelTextC = "c = ?";
-        } else if (currentQuestion.type === 'cosine_angle') {
-            // Câu hỏi tính góc/cosin: Hiển thị cả 3 cạnh vì đề cho biết 3 cạnh
-            labelTextA = `a = ${dispA}`;
+    let labelAngleA = "";
+    let labelAngleB = "";
+    let labelAngleC = "";
+
+    // Mặc định scenario tự tìm từ currentQuestion nếu không truyền vào
+    if (!scenario && typeof currentQuestion !== 'undefined' && currentQuestion) {
+        scenario = currentQuestion.type;
+    }
+
+    // A. GIẢ THIẾT: CẠNH - GÓC - CẠNH (SAS)
+    if (scenario === 'cosine_side' || scenario === 'SAS') {
+        let target = (currentQuestion && currentQuestion.target) ? currentQuestion.target : 'A';
+        if (target === 'A') {
+            // Cho b, c, góc A -> Tính a
             labelTextB = `b = ${dispB}`;
             labelTextC = `c = ${dispC}`;
+            labelTextA = "a = ?";
+            labelAngleA = `Â = ${currentQuestion.targetAngleVal || angleA_deg}°`;
+        } else if (target === 'B') {
+            // Cho a, c, góc B -> Tính b
+            labelTextA = `a = ${dispA}`;
+            labelTextC = `c = ${dispC}`;
+            labelTextB = "b = ?";
+            labelAngleB = `B̂ = ${currentQuestion.targetAngleVal || angleB_deg}°`;
+        } else if (target === 'C') {
+            // Cho a, b, góc C -> Tính c
+            labelTextA = `a = ${dispA}`;
+            labelTextB = `b = ${dispB}`;
+            labelTextC = "c = ?";
+            labelAngleC = `Ĉ = ${currentQuestion.targetAngleVal || angleC_deg}°`;
         }
+    }
+    // B. GIẢ THIẾT: CẠNH - CẠNH - CẠNH (SSS)
+    else if (scenario === 'cosine_angle' || scenario === 'SSS') {
+        // Cho cả 3 cạnh, hỏi góc hoặc cos
+        labelTextA = `a = ${dispA}`;
+        labelTextB = `b = ${dispB}`;
+        labelTextC = `c = ${dispC}`;
+
+        let targetCos = (currentQuestion && currentQuestion.target) ? currentQuestion.target : 'A';
+        if (targetCos === 'A') labelAngleA = "cosA = ?";
+        else if (targetCos === 'B') labelAngleB = "cosB = ?";
+        else if (targetCos === 'C') labelAngleC = "cosC = ?";
+    }
+    // C. GIẢ THIẾT: GÓC - CẠNH - GÓC Hoặc 2 GÓC 1 CẠNH (ASA / AAS)
+    else if (scenario === 'sine_two_angles_one_side' || scenario === 'ASA') {
+        let givenSide = (currentQuestion && currentQuestion.givenSide) ? currentQuestion.givenSide.toLowerCase() : 'a';
+        let targetSide = (currentQuestion && currentQuestion.targetSide) ? currentQuestion.targetSide.toLowerCase() : 'b';
+
+        // Gán nhãn cạnh đã cho và cạnh cần tính
+        labelTextA = (givenSide === 'a') ? `a = ${dispA}` : (targetSide === 'a' ? "a = ?" : "a");
+        labelTextB = (givenSide === 'b') ? `b = ${dispB}` : (targetSide === 'b' ? "b = ?" : "b");
+        labelTextC = (givenSide === 'c') ? `c = ${dispC}` : (targetSide === 'c' ? "c = ?" : "c");
+
+        // Gán 2 góc giả thiết cho sẵn trong đề bài
+        if (currentQuestion && currentQuestion.givenAngles) {
+            let g = currentQuestion.givenAngles; // ví dụ {A: 60, B: 45}
+            if (g.A) labelAngleA = `Â = ${g.A}°`;
+            if (g.B) labelAngleB = `B̂ = ${g.B}°`;
+            if (g.C) labelAngleC = `Ĉ = ${g.C}°`;
+        } else {
+            labelAngleA = `Â = ${angleA_deg}°`;
+            labelAngleB = `B̂ = ${angleB_deg}°`;
+        }
+    }
+    // D. DẠNG THỬ THÁCH VÀ CÁC DẠNG BÀI KHÁC
+    else if (scenario === 'challenge_area') {
+        labelTextB = `b = ${dispB}`;
+        labelTextC = `c = ${dispC}`;
+        labelTextA = "a";
+        labelAngleA = `Â = ${currentQuestion.targetAngleVal || angleA_deg}°`;
     }
 
     let fontSideSize = Math.max(Math.min(viewWidth * 0.03, 15), 12);
 
-    // Cạnh c (AB) - màu xám trung tính
+    // 7. VẼ CÁC NHÃN CẠNH
+    // Cạnh c (AB)
     createSvgText(svg, (screenAx + screenBx) / 2, screenAy + 22, labelTextC, `fill:${labelTextC.includes('?') ? '#dc2626' : '#64748b'}; font-weight:${labelTextC.includes('?') ? 'bold' : 'normal'}; font-size:${fontSideSize}px; text-anchor:middle;`);
-    
     // Cạnh b (AC)
     createSvgText(svg, (screenAx + screenCx) / 2 - 25, (screenAy + screenCy) / 2, labelTextB, `fill:${labelTextB.includes('?') ? '#dc2626' : '#64748b'}; font-weight:${labelTextB.includes('?') ? 'bold' : 'normal'}; font-size:${fontSideSize}px; text-anchor:middle;`);
-    
-    // Cạnh a (BC) - màu xanh lục hoặc đỏ nếu là cạnh cần tính
-    createSvgText(svg, (screenBx + screenCx) / 2 + 25, (screenBy + screenCy) / 2, labelTextA, `fill:${labelTextA.includes('?') ? '#dc2626' : '#10b981'}; font-weight:bold; font-size:${fontSideSize}px; text-anchor:middle;`);
+    // Cạnh a (BC)
+    createSvgText(svg, (screenBx + screenCx) / 2 + 25, (screenBy + screenCy) / 2, labelTextA, `fill:${labelTextA.includes('?') ? '#dc2626' : (labelTextA.includes('=') ? '#10b981' : '#64748b')}; font-weight:bold; font-size:${fontSideSize}px; text-anchor:middle;`);
 
-    updateViewportInfo(`Đang hiển thị tam giác ABC`);
+    // 8. VẼ CÁC NHÃN GÓC NẾU CÓ TRONG GIẢ THIẾT
+    let fontAngleSize = Math.max(Math.min(viewWidth * 0.028, 14), 11);
+    if (labelAngleA) createSvgText(svg, screenAx + 18, screenAy - 8, labelAngleA, `fill:#b91c1c; font-weight:bold; font-size:${fontAngleSize}px;`);
+    if (labelAngleB) createSvgText(svg, screenBx - 35, screenBy - 8, labelAngleB, `fill:#b91c1c; font-weight:bold; font-size:${fontAngleSize}px;`);
+    if (labelAngleC) createSvgText(svg, screenCx + 10, screenCy + 15, labelAngleC, `fill:#b91c1c; font-weight:bold; font-size:${fontAngleSize}px;`);
+
+    updateViewportInfo(`Đang hiển thị tam giác ABC theo giả thiết`);
 }
+
+// Wrapper giữ tương thích với các lệnh gọi cũ
+function drawTriangleThreeSidesSVG(a, b, c) {
+    drawTriangleByScenario(a, b, c, null);
+}
+
 
 function createSvgText(svg, x, y, textContent, style) {
     let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
