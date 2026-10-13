@@ -86,80 +86,63 @@ function renderCosineTab(container) {
 function startCosineQuestion() {
     let level = document.getElementById("cosineLevel") ? parseInt(document.getElementById("cosineLevel").value) : 3;
     let chosenType = 'side_a';
-    let rand = Math.random(); // Sinh số ngẫu nhiên từ 0.0 đến 1.0
+    let rand = Math.random(); 
 
     // Cấu hình tỷ lệ xác suất cho từng mức độ
     if (level === 1) {
-        // --- MỨC 1: Tìm cạnh a hoặc góc A cơ bản ---
-        if (rand < 0.70) {
-            chosenType = 'side_a';   // 70% Tỷ lệ tính cạnh a
-        } else {
-            chosenType = 'angle_a';  // 30% Tỷ lệ tính cosA
-        }
+        if (rand < 0.70) chosenType = 'side_a';   
+        else chosenType = 'angle_a';  
     } else if (level === 2) {
-        // --- MỨC 2: Tính ngẫu nhiên cạnh bất kỳ (a, b, hoặc c) ---
-        if (rand < 0.20) {
-            chosenType = 'side_a';   // 40% Tính cạnh a
-        } else if (rand < 0.60) {
-            chosenType = 'side_b';   // 30% Tính cạnh b
-        } else {
-            chosenType = 'side_c';   // 30% Tính cạnh c
-        }
+        if (rand < 0.33) chosenType = 'side_a';   
+        else if (rand < 0.66) chosenType = 'side_b';   
+        else chosenType = 'side_c';   
     } else if (level === 3) {
-        // --- MỨC 3: Tổng hợp (Tính cạnh bất kỳ & tính Cos các góc) ---
-        if (rand < 0.15) {
-            chosenType = 'side_a';   // 20% Tính cạnh a
-        } else if (rand < 0.35) {
-            chosenType = 'side_b';   // 20% Tính cạnh b
-        } else if (rand < 0.55) {
-            chosenType = 'side_c';   // 20% Tính cạnh c
-        } else if (rand < 0.70) {
-            chosenType = 'cos_a';    // 13.3% Tính cosA
-        } else if (rand < 0.85) {
-            chosenType = 'cos_b';    // 13.3% Tính cosB
-        } else {
-            chosenType = 'cos_c';    // 13.4% Tính cosC
-        }
+        if (rand < 0.20) chosenType = 'side_a';   
+        else if (rand < 0.40) chosenType = 'side_b';   
+        else if (rand < 0.60) chosenType = 'side_c';   
+        else if (rand < 0.73) chosenType = 'cos_a';    
+        else if (rand < 0.86) chosenType = 'cos_b';    
+        else chosenType = 'cos_c';    
     }
 
     // --- TRƯỜNG HỢP 1: TÍNH CẠNH (a, b hoặc c) ---
     if (chosenType.startsWith('side')) {
-        let targetSide = chosenType.split('_')[1].toUpperCase(); // 'A', 'B', hoặc 'C'
+        let targetSide = chosenType.split('_')[1].toUpperCase(); 
         
         let a, b, c;
         let angles = [30, 45, 60, 120, 135, 150];
-		let angleVal = angles[Math.floor(Math.random() * 6)];
+        let angleVal = angles[Math.floor(Math.random() * angles.length)];
         let rad = angleVal * Math.PI / 180;
 
+        // Mở rộng khoảng giá trị ngẫu nhiên từ 5 đến 12 (thay vì chỉ 5 đến 8)
         if (targetSide === 'A') {
-            b = Math.floor(Math.random() * 4) + 5;
-            c = Math.floor(Math.random() * 4) + 5;
+            b = Math.floor(Math.random() * 10) + 3; 
+            c = Math.floor(Math.random() * 10) + 3;
             a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(rad));
         } else if (targetSide === 'B') {
-            a = Math.floor(Math.random() * 4) + 5;
-            c = Math.floor(Math.random() * 4) + 5;
+            a = Math.floor(Math.random() * 10) + 3;
+            c = Math.floor(Math.random() * 10) + 3;
             b = Math.sqrt(a*a + c*c - 2*a*c*Math.cos(rad));
         } else { // 'C'
-            a = Math.floor(Math.random() * 4) + 5;
-            b = Math.floor(Math.random() * 4) + 5;
+            a = Math.floor(Math.random() * 10) + 3;
+            b = Math.floor(Math.random() * 10) + 3;
             c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(rad));
         }
 
         currentQuestion = {
             type: 'cosine_side',
-            target: targetSide, // 'A', 'B', 'C'
-            ansSide: Math.round((targetSide === 'A' ? a : targetSide === 'B' ? b : c) * 100) / 100,
+            target: targetSide,
+            ansSide: Math.round((targetSide === 'A' ? a : targetSide === 'B' ? b : c) * 10) / 10,
             a: a, b: b, c: c,
             targetAngleVal: angleVal
         };
 
         drawTriangleThreeSidesSVG(a, b, c);
 
-        let sideLower = targetSide.toLowerCase();
         let givenText = "";
         if (targetSide === 'A') givenText = `Cho $\\Delta ABC$ có $b = ${b}$, $c = ${c}$, $\\widehat{A} = ${angleVal}^{\\circ}$. Tính $a$?`;
-        else if (targetSide === 'B') givenText = `Cho $\\Delta ABC$ có $a = ${a}$, $c = ${c}$, $\\widehat{B} = ${angleVal}^{\\circ}$. Tính $b$?`;
-        else givenText = `Cho $\\Delta ABC$ có $a = ${a}$, $b = ${b}$, $\\widehat{C} = ${angleVal}^{\\circ}$. Tính $c$?`;
+        else if (targetSide === 'B') givenText = `Cho $\\Delta ABC$ có $a = ${Math.round(a*10)/10}$, $c = ${c}$, $\\widehat{B} = ${angleVal}^{\\circ}$. Tính $b$?`;
+        else givenText = `Cho $\\Delta ABC$ có $a = ${Math.round(a*10)/10}$, $b = ${b}$, $\\widehat{C} = ${angleVal}^{\\circ}$. Tính $c$?`;
 
         const quizArea = document.getElementById("cosineQuizArea");
         quizArea.innerHTML = `
@@ -190,9 +173,16 @@ function startCosineQuestion() {
     // --- TRƯỜNG HỢP 2: TÍNH GIÁ TRỊ COSIN (cosA, cosB, hoặc cosC) ---
     else {
         let targetCos = chosenType.split('_')[1].toUpperCase(); // 'A', 'B', hoặc 'C'
-        let a = 7, b = 6, c = 8;
-        let cosVal = 0;
+        
+        // Thay vì cố định 6, 7, 8, ta sinh ngẫu nhiên 3 cạnh thỏa mãn bất đẳng thức tam giác
+        let a, b, c;
+        do {
+            a = Math.floor(Math.random() * 10) + 3; // Từ 3 đến 11
+            b = Math.floor(Math.random() * 10) + 3;
+            c = Math.floor(Math.random() * 10) + 3;
+        } while (!(a + b > c && a + c > b && b + c > a)); // Đảm bảo tạo thành tam giác hợp lệ
 
+        let cosVal = 0;
         if (targetCos === 'A') {
             cosVal = (b*b + c*c - a*a) / (2 * b * c);
         } else if (targetCos === 'B') {
@@ -482,8 +472,8 @@ function startChallengeSession() {
 }
 
 function nextChallengeQuestion() {
-    let b = Math.floor(Math.random() * 4) + 5;
-    let c = Math.floor(Math.random() * 4) + 5;
+    let b = Math.floor(Math.random() * 10) + 3;
+    let c = Math.floor(Math.random() * 10) + 3;
     let angleA = [30, 45, 60, 120, 135, 150][Math.floor(Math.random() * 6)];
     let rad = angleA * Math.PI / 180;
     let a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(rad));
@@ -812,7 +802,7 @@ function startSineQuestion() {
         let radA = angleA_val * Math.PI / 180;
         let radB = angleB_val * Math.PI / 180;
 
-        let a = Math.floor(Math.random() * 5) + 6; // a từ 6 đến 10
+        let a = Math.floor(Math.random() * 10) + 3; // a từ 3 đến 11
         let b = a * Math.sin(radB) / Math.sin(radA);
         let c = a * Math.sin(angleC_val * Math.PI / 180) / Math.sin(radA);
 
@@ -836,7 +826,7 @@ function startSineQuestion() {
                 </div>
                 
                 <div id="step1Container">
-                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn đẳng thức Định lý Sin thể hiện mối liên hệ giữa $a, b, \\widehat{A}, \\widehat{B}$</b></label>
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn đẳng thức cần dùng</b></label>
                     <div id="step1Buttons" style="display:flex; flex-direction:column; gap:6px;">
                         <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep1(this, 'correct')">
                             <span>$\\frac{a}{\\sin A} = \\frac{b}{\\sin B}$</span>
@@ -862,7 +852,7 @@ function startSineQuestion() {
         let angleA_val = angles[Math.floor(Math.random() * angles.length)];
         let radA = angleA_val * Math.PI / 180;
 
-        let a = Math.floor(Math.random() * 6) + 5;
+        let a = Math.floor(Math.random() * 10) + 3;
         let R = a / (2 * Math.sin(radA));
 
         // Tạo 2 cạnh b, c hợp lệ để vẽ tam giác
@@ -911,7 +901,7 @@ function startSineQuestion() {
         let angleA_val = angles[Math.floor(Math.random() * angles.length)];
         let radA = angleA_val * Math.PI / 180;
 
-        let R = Math.floor(Math.random() * 5) + 6; // R từ 6 đến 10
+        let R = Math.floor(Math.random() * 10) + 3; // R từ 6 đến 10
         let a = 2 * R * Math.sin(radA);
 
         let b = R * 2 * Math.sin(45 * Math.PI / 180);
