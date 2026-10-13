@@ -128,7 +128,7 @@ function startCosineQuestion() {
         
         let a, b, c;
         let angles = [30, 45, 60, 120, 135, 150];
-		let angleVal = angles[Math.floor(Math.random() * angles.length)];
+		let angleVal = angles[Math.floor(Math.random() * 6)];
         let rad = angleVal * Math.PI / 180;
 
         if (targetSide === 'A') {
@@ -167,7 +167,7 @@ function startCosineQuestion() {
                 <div class="card-header"><span><b>Đề bài:</b> ${givenText}</span></div>
                 
                 <div id="step1Container">
-                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn công thức định lý Cosin gốc xuất phát chứa cạnh $${sideLower}$</b></label>
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn công thức cần dùng</b></label>
                     <div id="step1Buttons" style="display:flex; flex-direction:column; gap:6px;">
                         <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkCosineSideStep1(this, 'A')">
                             <span>$a^2 = b^2 + c^2 - 2bc \\cos A$</span>
@@ -216,7 +216,7 @@ function startCosineQuestion() {
                 <div class="card-header"><span><b>Đề bài:</b> Cho $\\Delta ABC$ có $a = ${a}$, $b = ${b}$, $c = ${c}$. Tính giá trị $\\cos ${targetCos}$?</span></div>
                 
                 <div id="step1Container">
-                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn định lý Cosin gốc xuất phát chứa góc $\\widehat{${targetCos}}$</b></label>
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn công thức cần dùng</b></label>
                     <div id="step1AngleButtons" style="display:flex; flex-direction:column; gap:6px;">
                         <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkCosineAngleStep1(this, 'A')">
                             <span>$a^2 = b^2 + c^2 - 2bc \\cos A$</span>
@@ -739,4 +739,399 @@ function createSvgText(svg, x, y, textContent, style) {
 function updateViewportInfo(text) {
     const coords = document.getElementById("cursorCoords");
     if (coords) coords.textContent = text;
+}
+
+
+
+// ==========================================
+// THẺ 2: LUYỆN TẬP ĐỊNH LÝ SIN (CÓ PHÂN BẬC MỨC ĐỘ & TÙY CHỈNH XÁC SUẤT)
+// ==========================================
+
+function renderSineTab(container) {
+    container.innerHTML = `
+        <h3>📐 Thẻ 2: Luyện Tập Định Lý Sin</h3>
+        <p class="hint">Thực hành mối liên hệ giữa các cạnh, góc và bán kính đường tròn ngoại tiếp $R$ qua định lý Sin:</p>
+        <p class="hint" style="text-align:center; font-weight:bold; color:var(--primary-color);">
+            $$\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C} = 2R$$
+        </p>
+        
+        <!-- Thanh chọn phân bậc mức độ -->
+        <div class="input-group" style="margin: 12px 0;">
+            <label><b>Chọn mức độ luyện tập:</b></label>
+            <select id="sineLevel" class="input-group" style="margin-top: 4px;">
+                <option value="1">Mức 1: Cho 2 góc + 1 cạnh, tính cạnh còn lại (Cơ bản)</option>
+                <option value="2">Mức 2: Cho 1 cạnh + 1 góc đối diện, tính bán kính R hoặc ngược lại</option>
+                <option value="3" selected>Mức 3: Tổng hợp (2 góc 1 cạnh + Bán kính ngoại tiếp R + Tìm góc)</option>
+            </select>
+        </div>
+        
+        <button class="btn btn-primary" onclick="startSineQuestion()">Tạo câu hỏi mới</button>
+        <div id="sineQuizArea"></div>
+    `;
+    updateViewportInfo("Định lý Sin: a / sinA = b / sinB = c / sinC = 2R");
+    startSineQuestion();
+}
+
+function startSineQuestion() {
+    let level = document.getElementById("sineLevel") ? parseInt(document.getElementById("sineLevel").value) : 3;
+    let chosenType = 'two_angles_side';
+    let rand = Math.random(); // Tỷ lệ xác suất từ 0.0 đến 1.0
+
+    // Cấu hình tỷ lệ xác suất phân bổ dạng bài cho Thẻ 2
+    if (level === 1) {
+        // Mức 1: 100% dạng 2 góc + 1 cạnh (ASA/AAS)
+        chosenType = 'two_angles_side';
+    } else if (level === 2) {
+        // Mức 2: 50% tính R, 50% tính cạnh từ R và góc
+        if (rand < 0.50) {
+            chosenType = 'find_R';
+        } else {
+            chosenType = 'side_from_R';
+        }
+    } else if (level === 3) {
+        // Mức 3: Tổng hợp các dạng bài
+        if (rand < 0.40) {
+            chosenType = 'two_angles_side';  // 40% Tính cạnh từ 2 góc 1 cạnh
+        } else if (rand < 0.70) {
+            chosenType = 'find_R';           // 30% Tính bán kính R
+        } else {
+            chosenType = 'side_from_R';      // 30% Tính cạnh khi biết R và góc
+        }
+    }
+
+    // --- DẠNG 1: CHO 2 GÓC VÀ 1 CẠNH -> TÍNH CẠNH CÒN LẠI ---
+    if (chosenType === 'two_angles_side') {
+        let angles = [30, 45, 60, 120, 135, 150];
+        let angleA_val = angles[Math.floor(Math.random() * angles.length)];
+        
+        // Chọn góc B sao cho A + B < 180
+        let validB = angles.filter(ang => ang + angleA_val < 180);
+        let angleB_val = validB[Math.floor(Math.random() * validB.length)];
+        let angleC_val = 180 - angleA_val - angleB_val;
+
+        let radA = angleA_val * Math.PI / 180;
+        let radB = angleB_val * Math.PI / 180;
+
+        let a = Math.floor(Math.random() * 5) + 6; // a từ 6 đến 10
+        let b = a * Math.sin(radB) / Math.sin(radA);
+        let c = a * Math.sin(angleC_val * Math.PI / 180) / Math.sin(radA);
+
+        currentQuestion = {
+            type: 'sine_two_angles_one_side',
+            givenSide: 'a',
+            targetSide: 'b',
+            givenAngles: { A: angleA_val, B: angleB_val },
+            ansSide: Math.round(b * 100) / 100,
+            a: a, b: b, c: c
+        };
+
+        // Vẽ hình minh họa chuẩn giả thiết ASA
+        drawTriangleByScenario(a, b, c, 'sine_two_angles_one_side');
+
+        const quizArea = document.getElementById("sineQuizArea");
+        quizArea.innerHTML = `
+            <div class="function-card" style="margin-top: 12px;">
+                <div class="card-header">
+                    <span><b>Đề bài:</b> Cho $\\Delta ABC$ có $a = ${a}$, $\\widehat{A} = ${angleA_val}^{\\circ}$, $\\widehat{B} = ${angleB_val}^{\\circ}$. Tính độ dài cạnh $b$?</span>
+                </div>
+                
+                <div id="step1Container">
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn đẳng thức Định lý Sin thể hiện mối liên hệ giữa $a, b, \\widehat{A}, \\widehat{B}$</b></label>
+                    <div id="step1Buttons" style="display:flex; flex-direction:column; gap:6px;">
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep1(this, 'correct')">
+                            <span>$\\frac{a}{\\sin A} = \\frac{b}{\\sin B}$</span>
+                        </button>
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep1(this, 'wrong1')">
+                            <span>$\\frac{a}{\\sin B} = \\frac{b}{\\sin A}$</span>
+                        </button>
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep1(this, 'wrong2')">
+                            <span>$\\frac{a}{\\cos A} = \\frac{b}{\\cos B}$</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="step2Container" style="display:none; margin-top: 10px;"></div>
+                <div id="step3Container" style="display:none; margin-top: 10px;"></div>
+                <div id="feedbackArea" style="margin-top: 8px; font-weight:600;"></div>
+            </div>
+        `;
+    }
+    // --- DẠNG 2: CHO CẠNH VÀ GÓC ĐỐI DIỆN -> TÍNH BÁN KÍNH R ---
+    else if (chosenType === 'find_R') {
+        let angles = [30, 45, 60, 120, 135, 150];
+        let angleA_val = angles[Math.floor(Math.random() * angles.length)];
+        let radA = angleA_val * Math.PI / 180;
+
+        let a = Math.floor(Math.random() * 6) + 5;
+        let R = a / (2 * Math.sin(radA));
+
+        // Tạo 2 cạnh b, c hợp lệ để vẽ tam giác
+        let b = R * 2 * Math.sin(45 * Math.PI / 180);
+        let angleC_deg = 180 - angleA_val - 45;
+        let c = R * 2 * Math.sin(angleC_deg * Math.PI / 180);
+
+        currentQuestion = {
+            type: 'sine_side_angle_R',
+            givenSide: 'a',
+            targetSide: 'none',
+            ansR: Math.round(R * 100) / 100,
+            a: a, b: b, c: c,
+            angleA: angleA_val
+        };
+
+        drawTriangleByScenario(a, b, c, 'sine_side_angle_R');
+
+        const quizArea = document.getElementById("sineQuizArea");
+        quizArea.innerHTML = `
+            <div class="function-card" style="margin-top: 12px;">
+                <div class="card-header">
+                    <span><b>Đề bài:</b> Cho $\\Delta ABC$ có cạnh $a = ${a}$ và góc $\\widehat{A} = ${angleA_val}^{\\circ}$. Tính bán kính đường tròn ngoại tiếp $R$ của tam giác?</span>
+                </div>
+                
+                <div id="step1Container">
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn công thức tính bán kính $R$ suy ra từ định lý Sin</b></label>
+                    <div id="step1Buttons" style="display:flex; flex-direction:column; gap:6px;">
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineRStep1(this, 'correct')">
+                            <span>$R = \\frac{a}{2 \\sin A}$</span>
+                        </button>
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineRStep1(this, 'wrong')">
+                            <span>$R = \\frac{a}{\\sin A}$</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="step2Container" style="display:none; margin-top: 10px;"></div>
+                <div id="feedbackArea" style="margin-top: 8px; font-weight:600;"></div>
+            </div>
+        `;
+    }
+    // --- DẠNG 3: CHO BÁN KÍNH R VÀ GÓC -> TÍNH CẠNH ĐỐI DIỆN ---
+    else if (chosenType === 'side_from_R') {
+        let angles = [30, 45, 60, 120, 135, 150];
+        let angleA_val = angles[Math.floor(Math.random() * angles.length)];
+        let radA = angleA_val * Math.PI / 180;
+
+        let R = Math.floor(Math.random() * 5) + 6; // R từ 6 đến 10
+        let a = 2 * R * Math.sin(radA);
+
+        let b = R * 2 * Math.sin(45 * Math.PI / 180);
+        let angleC_deg = 180 - angleA_val - 45;
+        let c = R * 2 * Math.sin(angleC_deg * Math.PI / 180);
+
+        currentQuestion = {
+            type: 'sine_side_angle_R',
+            givenSide: 'none',
+            targetSide: 'a',
+            ansSide: Math.round(a * 100) / 100,
+            a: a, b: b, c: c,
+            R: R, angleA: angleA_val
+        };
+
+        drawTriangleByScenario(a, b, c, 'sine_side_angle_R');
+
+        const quizArea = document.getElementById("sineQuizArea");
+        quizArea.innerHTML = `
+            <div class="function-card" style="margin-top: 12px;">
+                <div class="card-header">
+                    <span><b>Đề bài:</b> Cho $\\Delta ABC$ nội tiếp đường tròn bán kính $R = ${R}$ và có $\\widehat{A} = ${angleA_val}^{\\circ}$. Tính độ dài cạnh $a$?</span>
+                </div>
+                
+                <div id="step1Container">
+                    <label style="display:block; margin-bottom:6px;"><b>Bước 1: Chọn công thức tính cạnh $a$ theo $R$ và $\\sin A$</b></label>
+                    <div id="step1Buttons" style="display:flex; flex-direction:column; gap:6px;">
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineFromRStep1(this, 'correct')">
+                            <span>$a = 2R \\sin A$</span>
+                        </button>
+                        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineFromRStep1(this, 'wrong')">
+                            <span>$a = R \\sin A$</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="step2Container" style="display:none; margin-top: 10px;"></div>
+                <div id="feedbackArea" style="margin-top: 8px; font-weight:600;"></div>
+            </div>
+        `;
+    }
+
+    triggerMathRender();
+}
+
+// --- HÀM XỬ LÝ TƯƠNG TÁC TỪNG BƯỚC CHO THẺ 2 ---
+function checkSineStep1(btnElement, status) {
+    const feedback = document.getElementById("feedbackArea");
+    const container = document.getElementById("step1Buttons");
+    const allButtons = container.querySelectorAll("button");
+
+    if (status === 'correct') {
+        feedback.innerHTML = `<span style="color:var(--success-color);">✔ Chính xác! Mối liên hệ là $\\frac{a}{\\sin A} = \\frac{b}{\\sin B}$.</span>`;
+        allButtons.forEach(btn => {
+            if (btn !== btnElement) btn.style.display = "none";
+            else { btn.className = "btn btn-success"; btn.disabled = true; }
+        });
+
+        const step2 = document.getElementById("step2Container");
+        step2.style.display = "block";
+        step2.innerHTML = `
+            <label style="display:block; margin-bottom:6px;"><b>Bước 2: Biến đổi suy ra công thức tính $b$</b></label>
+            <div id="step2Buttons" style="display:flex; flex-direction:column; gap:6px;">
+                <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep2(this, 'correct')">
+                    <span>$b = \\frac{a \\cdot \\sin B}{\\sin A}$</span>
+                </button>
+                <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="checkSineStep2(this, 'wrong')">
+                    <span>$b = \\frac{a \\cdot \\sin A}{\\sin B}$</span>
+                </button>
+            </div>
+        `;
+        triggerMathRender();
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Chưa đúng, tỉ số định lý Sin là tỉ số giữa cạnh và sin của góc ĐỐI DIỆN cạnh đó.</span>`;
+        btnElement.style.display = "none";
+    }
+}
+
+function checkSineStep2(btnElement, status) {
+    const feedback = document.getElementById("feedbackArea");
+    const container = document.getElementById("step2Buttons");
+    const allButtons = container.querySelectorAll("button");
+
+    if (status === 'correct') {
+        feedback.innerHTML = `<span style="color:var(--success-color);">✔ Rất tốt! Giờ hãy tính giá trị số.</span>`;
+        allButtons.forEach(btn => {
+            if (btn !== btnElement) btn.style.display = "none";
+            else { btn.className = "btn btn-success"; btn.disabled = true; }
+        });
+
+        const step3 = document.getElementById("step3Container");
+        step3.style.display = "block";
+        step3.innerHTML = `
+            <label><b>Bước 3: Điền độ dài cạnh $b$ (làm tròn đến 2 chữ số thập phân)</b></label>
+            <div class="input-row" style="margin-top:6px;">
+                <input type="text" id="txtSineStep3" placeholder="Nhập độ dài b...">
+                <button class="btn btn-primary" onclick="checkSineStep3()">Nộp bài</button>
+            </div>
+        `;
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Biến đổi nhân chéo chia ngang chưa đúng!</span>`;
+        btnElement.style.display = "none";
+    }
+}
+
+function checkSineStep3() {
+    let studentVal = parseFloat(document.getElementById("txtSineStep3").value.trim().replace(',', '.'));
+    let trueVal = currentQuestion.ansSide;
+    let feedback = document.getElementById("feedbackArea");
+
+    if (!isNaN(studentVal) && Math.abs(studentVal - trueVal) <= 0.05) {
+        feedback.innerHTML = `<span style="color:var(--success-color); font-weight:bold;">🎉 Hoàn thành xuất sắc! Đáp án: $b \\approx ${trueVal}$</span>`;
+        document.getElementById("txtSineStep3").disabled = true;
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Chưa chính xác. Đáp án đúng là $b \\approx ${trueVal}$.</span>`;
+    }
+    triggerMathRender();
+}
+
+function checkSineRStep1(btnElement, status) {
+    const feedback = document.getElementById("feedbackArea");
+    const container = document.getElementById("step1Buttons");
+    const allButtons = container.querySelectorAll("button");
+
+    if (status === 'correct') {
+        feedback.innerHTML = `<span style="color:var(--success-color);">✔ Chính xác! $a / \\sin A = 2R \\Rightarrow R = a / (2 \\sin A)$.</span>`;
+        allButtons.forEach(btn => {
+            if (btn !== btnElement) btn.style.display = "none";
+            else { btn.className = "btn btn-success"; btn.disabled = true; }
+        });
+
+        const step2 = document.getElementById("step2Container");
+        step2.style.display = "block";
+        step2.innerHTML = `
+            <label><b>Bước 2: Điền bán kính $R$ (làm tròn đến 2 chữ số thập phân)</b></label>
+            <div class="input-row" style="margin-top:6px;">
+                <input type="text" id="txtSineRStep2" placeholder="Nhập bán kính R...">
+                <button class="btn btn-primary" onclick="checkSineRStep2()">Nộp bài</button>
+            </div>
+        `;
+        triggerMathRender();
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Quên chia 2! Vì $a / \\sin A = 2R$.</span>`;
+        btnElement.style.display = "none";
+    }
+}
+
+function checkSineRStep2() {
+    let studentVal = parseFloat(document.getElementById("txtSineRStep2").value.trim().replace(',', '.'));
+    let trueVal = currentQuestion.ansR;
+    let feedback = document.getElementById("feedbackArea");
+
+    if (!isNaN(studentVal) && Math.abs(studentVal - trueVal) <= 0.05) {
+        feedback.innerHTML = `<span style="color:var(--success-color); font-weight:bold;">🎉 Chính xác tuyệt đối! $R \\approx ${trueVal}$</span>`;
+        document.getElementById("txtSineRStep2").disabled = true;
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Chưa chính xác. Đáp án chuẩn là $R \\approx ${trueVal}$.</span>`;
+    }
+    triggerMathRender();
+}
+
+function checkSineFromRStep1(btnElement, status) {
+    const feedback = document.getElementById("feedbackArea");
+    const container = document.getElementById("step1Buttons");
+    const allButtons = container.querySelectorAll("button");
+
+    if (status === 'correct') {
+        feedback.innerHTML = `<span style="color:var(--success-color);">✔ Rất tốt! Công thức chuẩn là $a = 2R \\sin A$.</span>`;
+        allButtons.forEach(btn => {
+            if (btn !== btnElement) btn.style.display = "none";
+            else { btn.className = "btn btn-success"; btn.disabled = true; }
+        });
+
+        const step2 = document.getElementById("step2Container");
+        step2.style.display = "block";
+        step2.innerHTML = `
+            <label><b>Bước 2: Điền độ dài cạnh $a$ (làm tròn đến 2 chữ số thập phân)</b></label>
+            <div class="input-row" style="margin-top:6px;">
+                <input type="text" id="txtSineFromRStep2" placeholder="Nhập độ dài a...">
+                <button class="btn btn-primary" onclick="checkSineFromRStep2()">Nộp bài</button>
+            </div>
+        `;
+        triggerMathRender();
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Thiếu hệ số 2! Công thức chuẩn là $a = 2R \\sin A$.</span>`;
+        btnElement.style.display = "none";
+    }
+}
+
+function checkSineFromRStep2() {
+    let studentVal = parseFloat(document.getElementById("txtSineFromRStep2").value.trim().replace(',', '.'));
+    let trueVal = currentQuestion.ansSide;
+    let feedback = document.getElementById("feedbackArea");
+
+    if (!isNaN(studentVal) && Math.abs(studentVal - trueVal) <= 0.05) {
+        feedback.innerHTML = `<span style="color:var(--success-color); font-weight:bold;">🎉 Hoàn thành xuất sắc! $a \\approx ${trueVal}$</span>`;
+        document.getElementById("txtSineFromRStep2").disabled = true;
+    } else {
+        feedback.innerHTML = `<span style="color:var(--danger-color);">✖ Chưa đúng. Kết quả chuẩn là $a \\approx ${trueVal}$.</span>`;
+    }
+    triggerMathRender();
+}
+
+// FULL SCREEN BUTTON
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+if (fullscreenBtn) {
+    fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    });
 }
