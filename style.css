@@ -36,18 +36,19 @@ body {
 }
 
 .app-header {
-    background-color: var(--panel-bg);
+    background: var(--panel-bg);
     border-bottom: 1px solid var(--border-color);
-    padding: 12px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 8px 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     z-index: 10;
-
-    /* Thêm các thuộc tính sau để căn giữa */
     display: flex;
-    flex-direction: column;
-    align-items: center;    /* Căn giữa theo chiều ngang */
-    justify-content: center; /* Căn giữa theo chiều dọc */
-    text-align: center;      /* Căn giữa chữ khi xuống dòng */
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-header-content {
+    flex: 1;
+    text-align: center;
 }
 
 .app-header h1 {
@@ -112,7 +113,7 @@ body {
 }
 
 label {
-    font-size: 0.8rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--text-light);
 }
@@ -343,7 +344,7 @@ input[type="text"]:focus, select:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-light);
 }
@@ -489,4 +490,23 @@ input[type="text"]:focus, select:focus {
     .rotate-overlay {
         display: flex;
     }
+}
+
+.fullscreen-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+	width:28px;
+	height:28px;
+    padding: 1px 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-btn:hover {
+    background: #e2e8f0;
 }
